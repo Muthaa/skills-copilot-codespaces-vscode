@@ -1,37 +1,33 @@
-// Create web server
-const express = require('express');
-const app = express();
+// Create web server and listen on port 8080
 
-// Static file
-app.use(express.static('public'));
+// Load the http module to create an http server.
+var http = require('http');
+var url = require('url');
+var fs = require('fs');
 
-// Path: /comments
-app.get('/comments', (req, res) => {
-  res.json({ comments: [{ id: 1, body: 'hello' }, { id: 2, body: 'world' }] });
+// Configure our HTTP server to respond with Hello World to all requests.
+var server = http.createServer(function (request, response) {
+  var pathname = url.parse(request.url).pathname;
+  console.log("Request for " + pathname + " received.");
+
+  if(pathname === "/") {
+    response.writeHead(200, {"Content-Type": "text/html"});
+    response.write(fs.readFileSync('./index.html'));
+    response.end();
+  } else if(pathname === "/comments") {
+    var comments = JSON.parse(fs.readFileSync('./comments.json'));
+    response.writeHead(200, {"Content-Type": "application/json"});
+    response.write(JSON.stringify(comments));
+    response.end();
+  } else {
+    response.writeHead(404, {"Content-Type": "text/html"});
+    response.write("404 Not Found\n");
+    response.end();
+  }
 });
 
-// Start server
-app.listen(3000, () => {
-  console.log('Server is running on http://localhost:3000');
-});
+// Listen on port 8080
+server.listen(8080);
 
-// Path: index.html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comments</title>
-</head>
-<body>
-  <div id="comments"></div>
-  <script>
-    fetch('/comments')
-      .then(response => response.json())
-      .then(data => {
-        const comments = data.comments.map(comment => `<div>${comment.body}</div>`);
-        document.getElementById('comments').innerHTML = comments.join('');
-      });
-  </script>
-</body>
-</html>
+// Put a friendly message on the terminal
+console.log("Server running at http://):8080/");
